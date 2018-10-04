@@ -116,6 +116,9 @@ dmypy.json
 
 # Project generated folders
 
-data
-faces
-sets
+data*
+faces*
+sets*
+cascade_xml
+Videos
+videos
