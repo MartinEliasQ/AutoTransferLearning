@@ -41,7 +41,8 @@ class Faceudea(object):
         if model == "ResNet50":
             return ResNet50(weights="imagenet", include_top=False,
                             input_shape=(self.image_size, self.image_size, 3))
-
+    def more_data():
+        pass
     def pretrain_model(self):
         """dafasdf"""
         try:
@@ -106,12 +107,14 @@ class Faceudea(object):
             self.preprocessing.valid_folder,
             batch_size=batch_valid,
             class_mode="categorical",
+            shuffle=True,
             target_size=(self.image_size, self.image_size))
 
         self.test_generator = self.test_datagen.flow_from_directory(
             self.preprocessing.test_folder,
             batch_size=batch_valid,
             class_mode="categorical",
+            shuffle=True,
             target_size=(self.image_size, self.image_size))
 
         self.model = self.classifier.fit_generator(self.train_generator,

@@ -24,6 +24,9 @@ import shutil
 from sklearn.cross_validation import train_test_split
 from PIL import Image
 
+import imgaug as ia
+from imgaug import augmenters as iaa
+
 
 class Preprocessing(object):
     """
@@ -259,7 +262,7 @@ class Preprocessing(object):
         Preprocessing.create_folder(self.test_folder)
         Preprocessing.create_folder(self.valid_folder)
 
-    def create_sets(self):
+    def create_sets(self, augmentation):
         """
         SAFDA
         """
@@ -291,6 +294,13 @@ class Preprocessing(object):
             for img_t in img_train:
                 shutil.copy2(Preprocessing.str_join(
                     [label_path, img_t]), train_label_path)
+                if augmentation:
+                    im = Image.open(
+                        Preprocessing.str_join([label_path, img_t]))
+                    img_aug = Preprocessing.augmentation(np.asarray(im))
+                    for img in range(len(img_aug)):
+                        Image.fromarray(img_aug[img]).save(Preprocessing.str_join(
+                            [train_label_path, "aug-img-"+str(img) + str(datetime.now())+".jpg"]))
 
             for img_v in img_val:
                 shutil.copy2(Preprocessing.str_join(
@@ -307,4 +317,38 @@ class Preprocessing(object):
         self.create_folders_dataset()
         self.process_videos()
         self.process_images(mode)
-        self.create_sets()
+        self.create_sets(Augmentation)
+
+    @staticmethod
+    def augmentation(image):
+
+        augmentadores = [
+            iaa.Add(-10),
+            iaa.Add(45),
+            iaa.Add(80),
+            iaa.GaussianBlur(0.50),
+            iaa.GaussianBlur(1.0),
+            iaa.Dropout(0.03),
+            iaa.Dropout(0.05),
+            iaa.Dropout(0.10),
+            iaa.ContrastNormalization(0.5),
+            iaa.ContrastNormalization(1.2),
+            iaa.PerspectiveTransform(0.075),
+            iaa.PerspectiveTransform(0.100),
+            iaa.PerspectiveTransform(0.125),
+            iaa.Grayscale(alpha=1.0),
+            iaa.Grayscale(alpha=0.5),
+            iaa.Grayscale(alpha=0.2),
+            iaa.CoarsePepper(size_percent=0.30),
+            iaa.CoarsePepper(size_percent=0.02),
+            iaa.CoarsePepper(size_percent=0.1),
+            iaa.SaltAndPepper(p=0.05),
+            iaa.SaltAndPepper(p=0.03),
+            iaa.Affine(scale=0.5),
+        ]
+        ImageArray = list()
+        for i in range(len(augmentadores)):
+            seq = iaa.Sequential(augmentadores[i])
+            img_aug = seq.augment_image((np.asarray(image)))
+            ImageArray.append(img_aug)
+        return ImageArray
