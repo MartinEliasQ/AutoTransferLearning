@@ -1,5 +1,5 @@
 from functools import reduce
-
+import numpy as np
 from keras.applications.vgg16 import VGG16
 from keras.applications.vgg19 import VGG19
 from keras.applications.inception_v3 import InceptionV3
@@ -41,8 +41,7 @@ class Faceudea(object):
         if model == "ResNet50":
             return ResNet50(weights="imagenet", include_top=False,
                             input_shape=(self.image_size, self.image_size, 3))
-    def more_data():
-        pass
+
     def pretrain_model(self):
         """dafasdf"""
         try:
@@ -125,3 +124,15 @@ class Faceudea(object):
                                                    self.validation_generator.batch_size
                                                    )
         print("Done!")
+
+    def test(self):
+        file_names = self.test_generator.filenames
+        ground_truth = self.test_generator.classes
+        label2index = self.test_generator.class_indices
+        idx2label = dict((v, k) for k, v in label2index.items())
+        predictions = self.model.predict_generator(
+            self.test_generator, steps=self.test_generator.samples/self.test_generator.batch_size, verbose=1)
+        predicted_classes = np.argmax(predictions, axis=1)
+        errors = np.where(predicted_classes != ground_truth)[0]
+        print("No of errors = {}/{}".format(len(errors),
+                                            self.test_generator.samples))
