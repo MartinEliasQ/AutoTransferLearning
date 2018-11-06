@@ -21,7 +21,7 @@ Other libraries
 # from imgaug import augmenters as iaa
 # from skimage import io
 import shutil
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 from PIL import Image
 
 import imgaug as ia
