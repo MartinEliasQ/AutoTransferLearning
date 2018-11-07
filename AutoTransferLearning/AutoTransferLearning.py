@@ -12,6 +12,7 @@ from scipy import interp
 import matplotlib.pyplot as plt
 from itertools import cycle
 from sklearn.metrics import roc_curve, auc
+from sklearn.preprocessing import label_binarize
 
 
 class Faceudea(object):
@@ -157,3 +158,62 @@ class Faceudea(object):
             plt.title(title)
             plt.imshow(original)
             plt.show()
+
+    def compute_roc(self):
+
+        y_test = label_binarize(
+            self.ground_truth, classes=np.arange(self.predictions.shape[1]))
+        line_width = 2
+        false_positive_recall = dict()
+        true_positive_recall = dict()
+        roc_auc = dict()
+        for i in range(self.predictions.shape[1]):
+            false_positive_recall[i], true_positive_recall[i], _ = roc_curve(
+                y_test[:, i], self.predictions[:, i])
+            roc_auc[i] = auc(false_positive_recall[i], true_positive_recall[i])
+
+        false_positive_recall["micro"], true_positive_recall["micro"], _ = roc_curve(
+            y_test.ravel(), self.predictions.ravel())
+        roc_auc["micro"] = auc(
+            false_positive_recall["micro"], true_positive_recall["micro"])
+
+        all_false_positive_recall = np.unique(
+            np.concatenate([false_positive_recall[i] for i in range(self.predictions.shape[1])]))
+        mean_true_positive_recall = np.zeros_like(all_false_positive_recall)
+        for i in range(self.predictions.shape[1]):
+            mean_true_positive_recall += interp(
+                all_false_positive_recall, false_positive_recall[i], true_positive_recall[i])
+        mean_true_positive_recall /= self.predictions.shape[1]
+        false_positive_recall["macro"] = all_false_positive_recall
+        true_positive_recall["macro"] = mean_true_positive_recall
+        roc_auc["macro"] = auc(
+            false_positive_recall["macro"], true_positive_recall["macro"])
+
+        # Plot all ROC curves
+        plt.figure(1)
+        plt.plot(false_positive_recall["micro"], true_positive_recall["micro"],
+                 label='micro-average ROC curve (area = {0:0.2f})'
+                 ''.format(roc_auc["micro"]),
+                 color='deeppink', linestyle=':', linewidth=4)
+
+        plt.plot(false_positive_recall["macro"], true_positive_recall["macro"],
+                 label='macro-average ROC curve (area = {0:0.2f})'
+                 ''.format(roc_auc["macro"]),
+                 color='navy', linestyle=':', linewidth=4)
+
+        colors = cycle(
+            ['aqua', 'darkorange', 'cornflowerblue', "tomato", "darkcyan", "navy"])
+        for i, color in zip(range(self.predictions.shape[1]), colors):
+            plt.plot(false_positive_recall[i], true_positive_recall[i], color=color, lw=line_width,
+                     label='ROC curve of class {0} (area = {1:0.2f})'
+                     ''.format(self.idx2label[i], roc_auc[i]))
+
+        plt.plot([0, 1], [0, 1], 'k--', lw=line_width)
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title(
+            'Some extension of Receiver operating characteristic to multi-class')
+        plt.legend(loc="lower right")
+        plt.show()
