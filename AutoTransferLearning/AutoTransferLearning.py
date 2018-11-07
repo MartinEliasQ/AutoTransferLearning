@@ -131,27 +131,27 @@ class Faceudea(object):
         print("Done!")
 
     def test(self):
-        file_names = self.test_generator.filenames
+        self.file_names = self.test_generator.filenames
         self.ground_truth = self.test_generator.classes
         self.label2index = self.test_generator.class_indices
-        self.idx2label = dict((v, k) for k, v in label2index.items())
+        self.idx2label = dict((v, k) for k, v in self.label2index.items())
         self.predictions = self.classifier.predict_generator(
             self.test_generator, steps=self.test_generator.samples/self.test_generator.batch_size, verbose=1)
-        self.predicted_classes = np.argmax(predictions, axis=1)
-        self.errors = np.where(predicted_classes != ground_truth)[0]
-        print("No of errors = {}/{}".format(len(errors),
+        self.predicted_classes = np.argmax(self.predictions, axis=1)
+        self.errors = np.where(self.predicted_classes != self.ground_truth)[0]
+        print("No of errors = {}/{}".format(len(self.errors),
                                             self.test_generator.samples))
-        for i in range(len(errors)):
-            pred_class = np.argmax(predictions[errors[i]])
-            pred_label = idx2label[pred_class]
+        for i in range(len(self.errors)):
+            pred_class = np.argmax(self.predictions[self.errors[i]])
+            pred_label = self.idx2label[pred_class]
 
             title = 'Original label:{}, Prediction :{}, confidence : {:.3f}'.format(
-                file_names[errors[i]].split('/')[0],
+                self.file_names[self.errors[i]].split('/')[0],
                 pred_label,
-                predictions[errors[i]][pred_class])
+                self.predictions[self.errors[i]][pred_class])
 
             original = load_img(
-                '{}/{}'.format(self.test_generator, file_names[errors[i]]))
+                '{}/{}'.format(self.test_generator, self.file_names[self.errors[i]]))
             plt.figure(figsize=[7, 7])
             plt.axis('off')
             plt.title(title)
