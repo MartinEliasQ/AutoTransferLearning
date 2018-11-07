@@ -4,9 +4,14 @@ from keras.applications.vgg16 import VGG16
 from keras.applications.vgg19 import VGG19
 from keras.applications.inception_v3 import InceptionV3
 from keras.applications.resnet50 import ResNet50
-
+import matplotlib.pyplot as plt
 from keras.preprocessing.image import ImageDataGenerator, load_img
 from keras import models, layers, optimizers
+
+from scipy import interp
+import matplotlib.pyplot as plt
+from itertools import cycle
+from sklearn.metrics import roc_curve, auc
 
 
 class Faceudea(object):
@@ -127,12 +132,28 @@ class Faceudea(object):
 
     def test(self):
         file_names = self.test_generator.filenames
-        ground_truth = self.test_generator.classes
-        label2index = self.test_generator.class_indices
-        idx2label = dict((v, k) for k, v in label2index.items())
-        predictions = self.model.predict_generator(
+        self.ground_truth = self.test_generator.classes
+        self.label2index = self.test_generator.class_indices
+        self.idx2label = dict((v, k) for k, v in label2index.items())
+        self.predictions = self.classifier.predict_generator(
             self.test_generator, steps=self.test_generator.samples/self.test_generator.batch_size, verbose=1)
-        predicted_classes = np.argmax(predictions, axis=1)
-        errors = np.where(predicted_classes != ground_truth)[0]
+        self.predicted_classes = np.argmax(predictions, axis=1)
+        self.errors = np.where(predicted_classes != ground_truth)[0]
         print("No of errors = {}/{}".format(len(errors),
                                             self.test_generator.samples))
+        for i in range(len(errors)):
+            pred_class = np.argmax(predictions[errors[i]])
+            pred_label = idx2label[pred_class]
+
+            title = 'Original label:{}, Prediction :{}, confidence : {:.3f}'.format(
+                file_names[errors[i]].split('/')[0],
+                pred_label,
+                predictions[errors[i]][pred_class])
+
+            original = load_img(
+                '{}/{}'.format(self.test_generator, file_names[errors[i]]))
+            plt.figure(figsize=[7, 7])
+            plt.axis('off')
+            plt.title(title)
+            plt.imshow(original)
+            plt.show()
