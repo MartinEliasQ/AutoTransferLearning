@@ -151,7 +151,7 @@ class Faceudea(object):
                 self.predictions[self.errors[i]][pred_class])
 
             original = load_img(
-                '{}/{}'.format(self.test_generator, self.file_names[self.errors[i]]))
+                '{}/{}'.format(self.preprocessing.test_folder, self.file_names[self.errors[i]]))
             plt.figure(figsize=[7, 7])
             plt.axis('off')
             plt.title(title)
