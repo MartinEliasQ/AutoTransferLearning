@@ -119,7 +119,7 @@ class Faceudea(object):
             self.preprocessing.test_folder,
             batch_size=batch_valid,
             class_mode="categorical",
-            shuffle=True,
+            shuffle=False,
             target_size=(self.image_size, self.image_size))
 
         self.model = self.classifier.fit_generator(self.train_generator,
